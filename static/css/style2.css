@@ -1,0 +1,52 @@
+/* content */
+#content {
+    margin: 5px;
+    text-align: left;
+}
+/* container-fluid styling */
+.container-fluid {
+    padding-right: 0px;
+    padding-left: 0px;
+    margin-right: 0px;
+    margin-left:  0px;
+}
+
+@media only screen and (min-width: 768px){
+    .navbar-right {
+        float: right!important;
+        margin-right: 0px;
+    }
+}
+
+@media only screen and (max-width: 768px) { 
+    .shift{
+        max-width:50%; 
+        position: relative; 
+        left: 25vw;
+    }
+    .navbar li{
+        text-align: center;
+    }
+    form.form-horizontal{
+        width: 60vw;
+        margin-right: 20vw;
+        margin-left: 20vw;
+    }
+ }
+
+
+
+.input-group .input-group-btn {
+    display: inline;
+}
+
+ /**.row{
+    margin:0px; 
+}**/
+
+hr{
+    height: 1px; 
+    background-color: rgb(243, 141, 9); 
+    border: none; 
+    opacity: 0.2;
+}

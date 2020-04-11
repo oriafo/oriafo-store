@@ -1,0 +1,59 @@
+{% extends "layout2.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="container">
+    {% with messages = get_flashed_messages() %}                                            <!--snippet for flash messages-->
+        {% if messages %}
+           {% for message in messages %}
+                <div class="alert alert-success alert-dismissible">{{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+     {% endwith %}
+
+    {% if error %}                                                                          <!--snippet for error messages-->
+    <div class="alert alert-danger"><p><strong>Error:</strong> {{ error }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    </div>
+    {% endif %}
+
+    <h1 class="text-center">Enter your logging credentials</h1><hr><br><br>
+    <div class="row">
+    <div class="col-sm-6"><br>
+        <form action = "http://localhost:5000/login" method = "POST">
+            <div class="shift">
+                <label for="nm"><small>Username:</small></label>
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+                    <input type="text" class="form-control" name = "username" placeholder="Name" minlength="2" maxlength="20" required value={{request.form.username}}>
+                </div>
+                </div><br>
+            <div class="shift">
+                <label for="pwd"><small>Password:</small></label>
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+                    <input type="password" class="form-control" name="password" placeholder="Password" minlength="2" maxlength="20" required>
+                </div>
+            </div><br>
+        
+            <div class="shift">
+                    <div class="checkbox">
+                        <label><input type="checkbox" name="Remember_me"> Remember me</label>
+                    </div>
+            </div><br>
+
+            <div class="shift">
+                    Don't have an account yet? <a href="http://localhost:5000/Register">Register</a><br>
+                    <input class="btn btn-success" type = "submit" value = "submit"/>
+            </div>
+        </form><br>
+        
+    </div>
+    <div class="col-sm-6 hold">
+        <img class="img-responsive img-rounded hidden-xs" src="../static/image/mac.jpg"  alt="Cinque Terre">
+    </div>
+    </div>
+</div>
+{% endblock %}
+

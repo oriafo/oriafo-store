@@ -1,0 +1,27 @@
+{% extends "layout2.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="container">
+  {% with messages = get_flashed_messages() %}                                  <!--snippet for flash messages-->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-success alert-dismissible">{{ message }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% if error %}                                                                                <!--snippet for error messages-->
+    <div class="alert alert-danger"><p><strong>Error:</strong> {{ error }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    </div>
+  {% endif %}
+
+  <div class="jumbotron">
+    <br><br>
+      <h1 class="text-center">Welcome {{session.username}}</h1>
+  </div>
+</div>
+{% endblock %}
+
