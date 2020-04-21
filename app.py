@@ -1,6 +1,7 @@
 from flask import Flask, redirect, render_template, g, url_for, request, session, flash, url_for, logging, make_response
 #from wtforms import Form, BooleanField, StringField, PasswordField, validators
-from passlib.hash import sha256_crypt
+#from passlib.hash import sha256_crypt
+from passlib.hash import argon2
 from datetime import timedelta
 from functools import wraps
 import mysql.connector
@@ -10,14 +11,13 @@ import gc
   
 app = Flask(__name__)                                                           #creating an instance of the app
 app.secret_key = 'my first app'                                                 #secret key required by session
-app.config['PERMANENT_SESSION_LIFETIME'] =  timedelta(minutes=10)
+app.config['PERMANENT_SESSION_LIFETIME'] =  timedelta(days=366)
 logging.basicConfig(level=logging.INFO)
 
 
 #global COOKIE_TIME_OUT
 #COOKIE_TIME_OUT = 60*60*24*7 #7 days
 #COOKIE_TIME_OUT = 60*5 #5 minutes
-
 
                                                                                 #config MYSQL
 config = {
@@ -30,7 +30,9 @@ config = {
                                                                                 #home route
 @app.route('/Home')
 def Home():
-   return render_template('home.html')
+    post = session.get('password')
+    print(post)
+    return render_template('home.html')
 
                                                                                 #setting a cookie
 @app.route('/cookie/')
@@ -103,9 +105,11 @@ def register():
     if request.method == "POST":                                                #check which method was used
         username  = request.form["username"]
         email = request.form["email"]
-        password = sha256_crypt.hash((str(request.form["password"])))           #hashing and salting the password
+        #password = sha256_crypt.hash((str(request.form["password"])))           #hashing and salting the password
+        password = argon2.using(rounds=4).hash(request.form["password"])
         comfirm = request.form["comfirm password"]
-        if sha256_crypt.verify(comfirm, password):
+        #if sha256_crypt.verify(comfirm, password):
+        if argon2.verify(comfirm, password):
             db = mysql.connector.connect(**config)                                  #connecting to mysql database
             mycursor = db.cursor()                                                  #creating cursor object
             mycursor.execute("USE abraham")
@@ -167,70 +171,82 @@ def logout_required(test):                                                      
 def Login():
     return render_template('login.html')
     
-
-@app.route('/login', methods=['GET','POST'])
-@logout_required
+@app.route('/login', methods=['POST'])
+@logout_required 
 def login():
-    if 'username' in request.cookies == request.form["username"]:
-        username = request.cookies.get('username')
-        password = request.cookies.get('password')
-        print(username)
-        print(password)
+    error = None
+    global remember
+    username_1 = session.get('username')
+    username_2 = request.form['username'].strip()
+    password_1 = session.get('password')
+    password_2 = request.form['password'].strip()
+    remember_1 = request.form.getlist('Remember_me')
+    print(username_1)
+    print(username_2)
+    print(password_1)
+    print(password_2)
+    if 'username' in session and 'password' in session  and username_1 == username_2:        
+        db = mysql.connector.connect(**config)
+        mycursor = db.cursor()
+        mycursor.execute("USE abraham")
+        mycursor.execute("SELECT * FROM log_details WHERE username = %s", [username_1])   
+        data_1 = mycursor.fetchone()
+        print(data_1)
+        if data_1 != None:
+            compare = data_1[2] 
+            if compare == password_1:
+                db.close()
+                gc.collect()
+                session['logged_in'] = True                                    #creating a session for the user after logging_in
+                session['username'] = username_1
+                flash('You were successfully logged in')
+                if remember_1:
+                    session['username'] = username_2
+                    session['password'] = password_2 
+                    print(session['password'])
+                    session.modified = True
+                    return redirect(url_for('Dashboard', username=username_1))
+                return redirect(url_for('Dashboard', username=username_1))
+            else:
+                return redirect(url_for('Login'))
+        else:
+            return redirect(url_for('Login'))
+    elif request.method == 'POST':
+        username_a = request.form["username"]
+        username = username_a.strip()
+        password_b = request.form["password"]
+        password_insert = password_b.strip()
+        remember = request.form.getlist('Remember_me')
         db = mysql.connector.connect(**config)
         mycursor = db.cursor()
         mycursor.execute("USE abraham")
         mycursor.execute("SELECT * FROM log_details WHERE username = %s", [username])   
-        data = mycursor.fetchone()
-        print(data)
-        #print(password)
-        if data and sha256_crypt.verify(password, data[2]):
-            print(username + ' ' + password)
-            session['logged_in'] = True 
-            session['username'] = data[1]
-            print(session['username'])
-            mycursor.close()
-            return redirect(url_for('Dashboard'))
-        else:
-            return redirect(url_for('Login'))
-    elif request.method == 'POST':
-            error = None
-            global remember
-            username = request.form["username"]
-            print(username)
-            password_insert = request.form["password"]
-            print(password_insert)
-            remember = request.form.getlist('Remember_me')
-            db = mysql.connector.connect(**config)
-            mycursor = db.cursor()
-            mycursor.execute("USE abraham")
-            mycursor.execute("SELECT * FROM log_details WHERE username = %s", [username])   
-            data = mycursor.fetchone()
-            print(data) 
-            if data != None:
-                #print(data)                                                        #logic to determine if the username is in the database
-                password = data[2]
-                if sha256_crypt.verify(password_insert, password):              #method to verify is the inputed password match with the password in the database with the specified username
-                    logging.info('password matched')
-                    db.close()
-                    gc.collect()
-                    session['logged_in'] = True                                    #creating a session for the user after logging_in
-                    session['username'] = request.form['username']
-                    flash('You were successfully logged in')
-                    if remember:
-                        resp = make_response(redirect('/Dashboard'))
-                        resp.set_cookie('username', data[1], max_age=60*60*24*366)
-                        resp.set_cookie('password', password, max_age=60*60*24*366)
-                        resp.set_cookie('remember', 'checked', max_age=60*60*24*366)
-                        return resp
+        data = mycursor.fetchone() 
+        if data != None:                                                       #logic to determine if the username is in the database
+            password = data[2]
+            #if sha256_crypt.verify(password_insert, password):              #method to verify is the inputed password match with the password in the database with the specified username
+            if argon2.verify(password_insert, password):
+                logging.info('password matched')
+                db.close()
+                gc.collect()
+                session['logged_in'] = True                                    #creating a session for the user after logging_in
+                session['username'] = username
+                flash('You were successfully logged in')
+                if remember:
+                    session['username'] = username
+                    session['password'] = data[2] 
+                    print(session['password'])
+                    session.modified = True
                     return redirect(url_for('Dashboard', username=username))
-                else:
-                    logging.info('wrong credentials')
-                    error = 'wrong credentials'
-                    return render_template('login.html', error=error)
+                return redirect(url_for('Dashboard', username=username))
             else:
-                error = 'No user'
-                logging.info('no user')
+                logging.info('wrong credentials')
+                error = 'wrong credentials'
                 return render_template('login.html', error=error)
+        else:
+            error = 'No user'
+            logging.info('no user')
+            return render_template('login.html', error=error)
     else:
         error = 'wrong method'
         logging.info('wrong method')
@@ -241,7 +257,7 @@ def login():
 @app.route('/Logout')
 def Logout():
    session.pop('logged_in', None)                                            #clearing the username in the session if there
-   session.pop('username', None)
+   #session.pop('username', None)
    flash('You were successfully logged out')
    return redirect(url_for('Login'))
             

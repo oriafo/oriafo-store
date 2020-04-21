@@ -45,7 +45,7 @@
                             <li><a href="#"><span class="glyphicon glyphicon-shopping-cart"></span> cart</a></li>
                             {% if session.logged_in %}
                                 <li><a href="#"><span class="glyphicon glyphicon-user"></span> Account</a></li>
-                                <li><a href="{{ url_for('Logout') }}"><span class="glyphicon glyphicon-log-out"> Logout</a></li>
+                                <li><a href="{{ url_for('Logout') }}"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
                             {% else %}
                                 <li><a href="{{ url_for('Register') }}"><span class="glyphicon glyphicon-user"></span> Register</a></li>
                                 <li><a href="{{ url_for('Login') }}"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>

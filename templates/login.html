@@ -26,14 +26,14 @@
                 <label for="nm"><small>Username:</small></label>
                 <div class="input-group">
                     <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-                    <input type="text" class="form-control" name = "username" placeholder="Name" minlength="2" maxlength="20" required value="{% if 'username' in request.cookies %} {{ request.cookies.get('username') }} {% endif %}">
+                    <input type="text" class="form-control"  name = "username" placeholder="Name" minlength="2" maxlength="20" required value="{% if 'username' in session %} {{ session.get('username') }} {% endif %}">
                 </div>
                 </div><br>
             <div class="shift">
                 <label for="pwd"><small>Password:</small></label>
                 <div class="input-group">
                     <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
-                    <input type="password" class="form-control" name="password" placeholder="Password" minlength="2" maxlength="20" required value="{% if 'password' in request.cookies %} {{ request.cookies.get('password') }} {% endif %}">
+                    <input type="password" class="form-control" required autocomplete =  "current-password" name="password" placeholder="Password" minlength="2" maxlength="20" required value="{% if 'password' in session %} {{ session.get('password') }} {% endif %}">
                 </div>
             </div><br>
         
